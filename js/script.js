@@ -18,6 +18,125 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Feedback form handling
+    const feedbackForm = document.getElementById('feedback-form');
+    const popup = document.getElementById('popup');
+    const popupClose = document.querySelector('.popup-close');
+
+    if (feedbackForm) {
+        feedbackForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('name').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                message: document.getElementById('message').value.trim()
+            };
+
+            if (!formData.name || !formData.email || !formData.message) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(formData.email)) {
+                alert('Please enter a valid email address');
+                return;
+            }
+
+            try {
+                console.log('Form submitted:', formData);
+                popup.classList.add('active');
+                feedbackForm.reset();
+                document.body.style.overflow = 'hidden';
+                
+                setTimeout(() => {
+                    popup.classList.remove('active');
+                    document.body.style.overflow = '';
+                }, 3000);
+            } catch (error) {
+                console.error('Error submitting form:', error);
+                alert('Failed to submit feedback. Please try again.');
+            }
+        });
+    }
+
+    if (popupClose) {
+        popupClose.addEventListener('click', () => {
+            popup.classList.remove('active');
+            document.body.style.overflow = '';
+        });
+    }
+
+    if (popup) {
+        popup.addEventListener('click', (e) => {
+            if (e.target === popup) {
+                popup.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        });
+    }
+
+    // Handle mobile keyboard
+    const inputs = document.querySelectorAll('input, textarea');
+    inputs.forEach(input => {
+        input.addEventListener('focus', () => {
+            setTimeout(() => {
+                input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 300);
+        });
+    });
+
+    // QR code generation
+    const qrForm = document.getElementById('qr-form');
+    const urlInput = document.getElementById('url-input');
+    const qrCodeDiv = document.getElementById('qr-code');
+    const recentUrlsDiv = document.querySelector('.url-list');
+
+    if (recentUrlsDiv) {
+        loadRecentUrls();
+    }
+
+    if (qrForm) {
+        qrForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const url = urlInput.value.trim();
+            
+            if (!url) return;
+
+            try {
+                const response = await fetch('http://localhost:3000/api/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ url })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    qrCodeDiv.innerHTML = `
+                        <img src="${data.qrCode}" alt="QR Code" class="qr-image">
+                        <div class="qr-actions">
+                            <button onclick="downloadQR('${data.id}')" class="download-btn">
+                                <i class="fas fa-download"></i> Download
+                            </button>
+                        </div>
+                    `;
+                    
+                    urlInput.value = '';
+                    loadRecentUrls();
+                } else {
+                    alert('Failed to generate QR code');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to generate QR code');
+            }
+        });
+    }
+
     // Clear recent URLs
     const clearButton = document.getElementById('clear-recent');
     if (clearButton) {
@@ -42,62 +161,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.error('Error clearing recent URLs:', error);
                     alert('Failed to clear recent URLs');
                 }
-            }
-        });
-    }
-
-    // Existing QR code generation code
-    const qrForm = document.getElementById('qr-form');
-    const urlInput = document.getElementById('url-input');
-    const qrCodeDiv = document.getElementById('qr-code');
-    const recentUrlsDiv = document.querySelector('.url-list');
-
-    // Load recent URLs on page load
-    if (recentUrlsDiv) {
-        loadRecentUrls();
-    }
-
-    // Handle QR code generation
-    if (qrForm) {
-        qrForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const url = urlInput.value.trim();
-            
-            if (!url) return;
-
-            try {
-                const response = await fetch('http://localhost:3000/api/generate', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ url })
-                });
-
-                const data = await response.json();
-                
-                if (data.success) {
-                    // Display QR code
-                    qrCodeDiv.innerHTML = `
-                        <img src="${data.qrCode}" alt="QR Code" class="qr-image">
-                        <div class="qr-actions">
-                            <button onclick="downloadQR('${data.id}')" class="download-btn">
-                                <i class="fas fa-download"></i> Download
-                            </button>
-                        </div>
-                    `;
-                    
-                    // Clear input
-                    urlInput.value = '';
-                    
-                    // Reload recent URLs
-                    loadRecentUrls();
-                } else {
-                    alert('Failed to generate QR code');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Failed to generate QR code');
             }
         });
     }

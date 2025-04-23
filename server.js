@@ -2,7 +2,6 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const QRCode = require('qrcode');
-const path = require('path');
 require('dotenv').config();
 
 const app = express();
@@ -10,7 +9,7 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static('.'));
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/qr-generator', {
@@ -42,11 +41,8 @@ const QR = mongoose.model('QR', qrSchema);
 app.post('/api/generate', async (req, res) => {
     try {
         const { url } = req.body;
-        
-        // Generate QR code as data URL
         const qrCodeDataUrl = await QRCode.toDataURL(url);
         
-        // Save to database
         const qr = new QR({
             url,
             qrCode: qrCodeDataUrl
@@ -97,7 +93,6 @@ app.get('/api/download/:id', async (req, res) => {
             });
         }
 
-        // Convert data URL to buffer
         const qrBuffer = Buffer.from(qr.qrCode.split(',')[1], 'base64');
         
         res.setHeader('Content-Type', 'image/png');
