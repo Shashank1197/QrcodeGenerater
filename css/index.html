@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Generator</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <i class="fas fa-qrcode"></i>
+            <span>QR Generator</span>
+        </div>
+        <button class="menu-toggle" aria-label="Toggle menu">
+            <i class="fas fa-bars"></i>
+        </button>
+        <ul class="nav-links">
+            <li><a href="index.html" class="active">Home</a></li>
+            <li><a href="html/about.html">About Us</a></li>
+            <li><a href="html/feedback.html">Feedback</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <h1>QR Code Generator</h1>
+        <form id="qr-form">
+            <input type="text" id="url-input" placeholder="Enter URL" required>
+            <button type="submit">Generate QR Code</button>
+        </form>
+        <div id="qr-code"></div>
+
+        <div class="recent-urls">
+            <div class="recent-urls-header">
+                <h2>Recent URLs</h2>
+                <button id="clear-recent" class="clear-btn" title="Clear all recent URLs">
+                    <i class="fas fa-trash"></i> Clear All
+                </button>
+            </div>
+            <div class="url-list">
+                <div class="url-item">
+                    <div class="url-info">
+                        <i class="fas fa-link"></i>
+                        <span>https://example.com</span>
+                    </div>
+                    <div class="url-actions">
+                        <button class="copy-btn" title="Copy URL"><i class="fas fa-copy"></i></button>
+                        <button class="regenerate-btn" title="Regenerate QR"><i class="fas fa-sync"></i></button>
+                    </div>
+                </div>
+                <div class="url-item">
+                    <div class="url-info">
+                        <i class="fas fa-link"></i>
+                        <span>https://github.com</span>
+                    </div>
+                    <div class="url-actions">
+                        <button class="copy-btn" title="Copy URL"><i class="fas fa-copy"></i></button>
+                        <button class="regenerate-btn" title="Regenerate QR"><i class="fas fa-sync"></i></button>
+                    </div>
+                </div>
+                <div class="url-item">
+                    <div class="url-info">
+                        <i class="fas fa-link"></i>
+                        <span>https://linkedin.com</span>
+                    </div>
+                    <div class="url-actions">
+                        <button class="copy-btn" title="Copy URL"><i class="fas fa-copy"></i></button>
+                        <button class="regenerate-btn" title="Regenerate QR"><i class="fas fa-sync"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>QR Code Generator</h3>
+                <p>Create QR codes instantly for your URLs</p>
+            </div>
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="html/about.html">About Us</a></li>
+                    <li><a href="html/feedback.html">Feedback</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Contact</h3>
+                <p>Email: Shashank&Prince@qrgenerator.com</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 QR Code Generator. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.4.4/build/qrcode.min.js"></script>
+    <script src="js/script.js"></script>
+</body>
+</html>
