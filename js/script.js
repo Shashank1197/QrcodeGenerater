@@ -93,46 +93,95 @@ document.addEventListener('DOMContentLoaded', () => {
     const qrCodeDiv = document.getElementById('qr-code');
     const recentUrlsDiv = document.querySelector('.url-list');
 
-    if (recentUrlsDiv) {
+    // Store recent URLs in localStorage
+    function saveRecentUrl(url) {
+        let recentUrls = JSON.parse(localStorage.getItem('recentUrls') || '[]');
+        recentUrls = [url, ...recentUrls.filter(u => u !== url)].slice(0, 10);
+        localStorage.setItem('recentUrls', JSON.stringify(recentUrls));
         loadRecentUrls();
     }
 
+    function loadRecentUrls() {
+        const recentUrls = JSON.parse(localStorage.getItem('recentUrls') || '[]');
+        const recentUrlsDiv = document.querySelector('.url-list');
+        
+        if (recentUrlsDiv) {
+            if (recentUrls.length === 0) {
+                recentUrlsDiv.innerHTML = '<p class="no-urls">No recent URLs</p>';
+            } else {
+                recentUrlsDiv.innerHTML = recentUrls.map(url => `
+                    <div class="url-item">
+                        <div class="url-info">
+                            <i class="fas fa-link"></i>
+                            <span>${url}</span>
+                        </div>
+                        <div class="url-actions">
+                            <button onclick="copyUrl('${url}')" class="copy-btn" title="Copy URL">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <button onclick="regenerateQR('${url}')" class="regenerate-btn" title="Regenerate QR">
+                                <i class="fas fa-sync"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+    }
+
     if (qrForm) {
-        qrForm.addEventListener('submit', async (e) => {
+        qrForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const url = urlInput.value.trim();
             
-            if (!url) return;
+            if (!url) {
+                alert('Please enter a URL');
+                return;
+            }
 
             try {
-                const response = await fetch('http://localhost:3000/api/generate', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ url })
-                });
-
-                const data = await response.json();
+                // Clear previous QR code
+                qrCodeDiv.innerHTML = '';
                 
-                if (data.success) {
-                    qrCodeDiv.innerHTML = `
-                        <img src="${data.qrCode}" alt="QR Code" class="qr-image">
-                        <div class="qr-actions">
-                            <button onclick="downloadQR('${data.id}')" class="download-btn">
-                                <i class="fas fa-download"></i> Download
-                            </button>
-                        </div>
-                    `;
-                    
-                    urlInput.value = '';
-                    loadRecentUrls();
-                } else {
-                    alert('Failed to generate QR code');
-                }
+                // Create a new QRCode instance
+                new QRCode(qrCodeDiv, {
+                    text: url,
+                    width: 256,
+                    height: 256,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+                
+                // Add download button after a short delay to ensure QR code is rendered
+                setTimeout(() => {
+                    const img = qrCodeDiv.querySelector('img');
+                    if (img) {
+                        const downloadBtn = document.createElement('button');
+                        downloadBtn.className = 'download-btn';
+                        downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download';
+                        downloadBtn.onclick = () => {
+                            const link = document.createElement('a');
+                            link.download = 'qrcode.png';
+                            link.href = img.src;
+                            link.click();
+                        };
+                        
+                        const actionsDiv = document.createElement('div');
+                        actionsDiv.className = 'qr-actions';
+                        actionsDiv.appendChild(downloadBtn);
+                        qrCodeDiv.appendChild(actionsDiv);
+                        
+                        // Save to recent URLs
+                        saveRecentUrl(url);
+                        urlInput.value = '';
+                    } else {
+                        alert('Failed to generate QR code. Please try again.');
+                    }
+                }, 100);
             } catch (error) {
-                console.error('Error:', error);
-                alert('Failed to generate QR code');
+                console.error('Error generating QR code:', error);
+                alert('Failed to generate QR code. Please try again.');
             }
         });
     }
@@ -140,77 +189,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // Clear recent URLs
     const clearButton = document.getElementById('clear-recent');
     if (clearButton) {
-        clearButton.addEventListener('click', async () => {
+        clearButton.addEventListener('click', () => {
             if (confirm('Are you sure you want to clear all recent URLs?')) {
-                try {
-                    const response = await fetch('http://localhost:3000/api/recent', {
-                        method: 'DELETE'
-                    });
-                    const data = await response.json();
-                    
-                    if (data.success) {
-                        const urlList = document.querySelector('.url-list');
-                        if (urlList) {
-                            urlList.innerHTML = '<p class="no-urls">No recent URLs</p>';
-                        }
-                        alert('All recent URLs have been cleared');
-                    } else {
-                        alert('Failed to clear recent URLs');
-                    }
-                } catch (error) {
-                    console.error('Error clearing recent URLs:', error);
-                    alert('Failed to clear recent URLs');
+                localStorage.removeItem('recentUrls');
+                const urlList = document.querySelector('.url-list');
+                if (urlList) {
+                    urlList.innerHTML = '<p class="no-urls">No recent URLs</p>';
                 }
             }
         });
     }
+
+    // Initial load of recent URLs
+    loadRecentUrls();
 });
-
-// Load recent URLs
-async function loadRecentUrls() {
-    try {
-        const response = await fetch('http://localhost:3000/api/recent');
-        const data = await response.json();
-        
-        if (data.success) {
-            const recentUrlsDiv = document.querySelector('.url-list');
-            if (recentUrlsDiv) {
-                if (data.qrs.length === 0) {
-                    recentUrlsDiv.innerHTML = '<p class="no-urls">No recent URLs</p>';
-                } else {
-                    recentUrlsDiv.innerHTML = data.qrs.map(qr => `
-                        <div class="url-item">
-                            <div class="url-info">
-                                <i class="fas fa-link"></i>
-                                <span>${qr.url}</span>
-                            </div>
-                            <div class="url-actions">
-                                <button onclick="copyUrl('${qr.url}')" class="copy-btn" title="Copy URL">
-                                    <i class="fas fa-copy"></i>
-                                </button>
-                                <button onclick="downloadQR('${qr._id}')" class="download-btn" title="Download QR">
-                                    <i class="fas fa-download"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `).join('');
-                }
-            }
-        }
-    } catch (error) {
-        console.error('Error loading recent URLs:', error);
-    }
-}
-
-// Download QR code
-async function downloadQR(id) {
-    try {
-        window.location.href = `http://localhost:3000/api/download/${id}`;
-    } catch (error) {
-        console.error('Error downloading QR code:', error);
-        alert('Failed to download QR code');
-    }
-}
 
 // Copy URL to clipboard
 function copyUrl(url) {
@@ -222,4 +214,13 @@ function copyUrl(url) {
             console.error('Failed to copy URL:', err);
             alert('Failed to copy URL');
         });
+}
+
+// Regenerate QR code for a URL
+function regenerateQR(url) {
+    const urlInput = document.getElementById('url-input');
+    const qrForm = document.getElementById('qr-form');
+    
+    urlInput.value = url;
+    qrForm.dispatchEvent(new Event('submit'));
 }
