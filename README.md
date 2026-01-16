@@ -58,3 +58,14 @@ Follow these steps to run the project on your computer.
 ```bash
 git clone https://github.com/Shashank1197/QrcodeGenerater.git
 cd QrcodeGenerater
+
+## ✔️ Step 2 — Install Dependencies
+
+After entering the project folder, install the required Python libraries:
+
+```bash
+pip install qrcode pillow
+
+pip install -r requirements.txt
+
+python main.py
