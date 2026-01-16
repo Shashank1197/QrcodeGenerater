@@ -66,5 +66,6 @@ After entering the project folder, install the required Python libraries:
 pip install qrcode pillow
 
 pip install -r requirements.txt
+## ✔️ Step 3 — Run code
 
 python main.py
